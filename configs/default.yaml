@@ -1,0 +1,66 @@
+# Default training configuration.
+# Override any field with --cfg path/to/your.yaml or CLI key=value pairs.
+
+experiment:
+  name: resnet18_cifar10
+  seed: 42
+  output_dir: ./runs/resnet18_cifar10
+  log_interval: 50          # batches between train log lines
+
+# ---------- Data ----------
+data:
+  name: cifar10             # registered dataset name (cifar10 | cifar100 | imagefolder)
+  root: ./data
+  num_classes: 10
+  image_size: 32            # base side length used by default transforms
+  batch_size: 128
+  num_workers: 4
+  pin_memory: true
+
+  # Per-channel normalization stats. CIFAR-10 stats by default.
+  mean: [0.4914, 0.4822, 0.4465]
+  std:  [0.2470, 0.2435, 0.2616]
+
+  # Augmentation knobs (applied to the train split only).
+  augmentation:
+    horizontal_flip: 0.5    # probability; 0 to disable
+    rotation_degrees: 15    # 0 to disable
+    color_jitter:
+      brightness: 0.2
+      contrast: 0.2
+      saturation: 0.2
+      hue: 0.05
+    random_crop_padding: 4  # >0 enables padded random crop at image_size
+
+# ---------- Model ----------
+model:
+  name: resnet18            # registered model name
+  pretrained: true          # use torchvision IMAGENET1K_V1 weights
+  # When using small images (e.g. CIFAR), adapt the stem to avoid early downsampling.
+  small_input_stem: true
+
+# ---------- Optimization ----------
+optim:
+  name: sgd                 # sgd | adam | adamw
+  lr: 0.1
+  momentum: 0.9
+  weight_decay: 0.0005
+  nesterov: true
+
+scheduler:
+  name: cosine              # cosine | step | none
+  warmup_epochs: 0
+  step_size: 30             # used only when name == step
+  gamma: 0.1                # used only when name == step
+
+# ---------- Training ----------
+train:
+  epochs: 50
+  amp: true                 # mixed precision on CUDA
+  grad_clip: 0.0            # 0 disables clipping
+  save_best_metric: val_acc # metric used to pick best.pt
+
+# ---------- Evaluation ----------
+eval:
+  batch_size: 256
+  checkpoint: ./runs/resnet18_cifar10/best.pt
